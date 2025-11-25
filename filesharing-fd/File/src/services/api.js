@@ -1,7 +1,9 @@
 // ============================
-// BASE URL (NGINX PROXY)
+// DIRECT BACKEND URL
 // ============================
-const BASE = "/api";  // VERY IMPORTANT
+const BASE = "http://localhost:30082/api";  
+// FULL URL: http://localhost:30082/api/auth/login
+//           http://localhost:30082/api/auth/register
 
 const getToken = () => localStorage.getItem("authToken");
 
@@ -19,10 +21,8 @@ export const authApi = {
     });
 
     const data = await res.json().catch(() => ({}));
-
     if (!res.ok) throw new Error(data.error || "Register failed");
-
-    return data; // contains { token, user }
+    return data;
   },
 
   async login(email, password) {
@@ -35,9 +35,7 @@ export const authApi = {
     });
 
     const data = await res.json().catch(() => ({}));
-
     if (!res.ok) throw new Error(data.error || "Login failed");
-
     return data;
   },
 };
@@ -99,7 +97,6 @@ export const foldersApi = {
     return res.json();
   },
 };
-
 
 // ============================
 // SHARES API
