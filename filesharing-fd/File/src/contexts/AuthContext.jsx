@@ -1,5 +1,5 @@
-import { createContext, useContext, useReducer, useEffect } from 'react';
-import { authApi } from '../services/api';
+import { createContext, useContext, useReducer, useEffect } from "react";
+import { authApi } from "../services/api";
 
 const AuthContext = createContext();
 
@@ -7,45 +7,45 @@ const initialState = {
   user: null,
   isAuthenticated: false,
   isLoading: true,
-  error: null
+  error: null,
 };
 
 const authReducer = (state, action) => {
   switch (action.type) {
-    case 'LOGIN_START':
+    case "LOGIN_START":
       return { ...state, isLoading: true, error: null };
 
-    case 'LOGIN_SUCCESS':
+    case "LOGIN_SUCCESS":
       return {
         ...state,
         user: action.payload,
         isAuthenticated: true,
         isLoading: false,
-        error: null
+        error: null,
       };
 
-    case 'LOGIN_FAILURE':
+    case "LOGIN_FAILURE":
       return {
         ...state,
         user: null,
         isAuthenticated: false,
         isLoading: false,
-        error: action.payload
+        error: action.payload,
       };
 
-    case 'LOGOUT':
+    case "LOGOUT":
       return {
         ...state,
         user: null,
         isAuthenticated: false,
         isLoading: false,
-        error: null
+        error: null,
       };
 
-    case 'UPDATE_USER':
+    case "UPDATE_USER":
       return {
         ...state,
-        user: { ...state.user, ...action.payload }
+        user: { ...state.user, ...action.payload },
       };
 
     default:
@@ -58,13 +58,13 @@ export const AuthProvider = ({ children }) => {
 
   // Restore login session
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const userData = localStorage.getItem('userData');
+    const token = localStorage.getItem("authToken");
+    const userData = localStorage.getItem("userData");
 
     if (token && userData) {
-      dispatch({ type: 'LOGIN_SUCCESS', payload: JSON.parse(userData) });
+      dispatch({ type: "LOGIN_SUCCESS", payload: JSON.parse(userData) });
     } else {
-      dispatch({ type: 'LOGOUT' });
+      dispatch({ type: "LOGOUT" });
     }
   }, []);
 
@@ -72,24 +72,25 @@ export const AuthProvider = ({ children }) => {
   // LOGIN
   // ============================
   const login = async (email, password) => {
-    dispatch({ type: 'LOGIN_START' });
+    dispatch({ type: "LOGIN_START" });
 
     try {
       const res = await authApi.login(email, password);
 
-      // API returns:  { token, user }
-      localStorage.setItem('authToken', res.token);
-      localStorage.setItem('userData', JSON.stringify(res.user));
+      // Backend returns: { token, user }
+      if (res.token) {
+        localStorage.setItem("authToken", res.token);
+        localStorage.setItem("userData", JSON.stringify(res.user));
 
-      dispatch({ type: 'LOGIN_SUCCESS', payload: res.user });
-      return { success: true };
-
+        dispatch({ type: "LOGIN_SUCCESS", payload: res.user });
+        return { success: true, user: res.user };
+      }
+      return { success: false, error: "Invalid login response" };
     } catch (err) {
       dispatch({
-        type: 'LOGIN_FAILURE',
-        payload: err.message || 'Login failed'
+        type: "LOGIN_FAILURE",
+        payload: err.message || "Login failed",
       });
-
       return { success: false, error: err.message };
     }
   };
@@ -98,22 +99,25 @@ export const AuthProvider = ({ children }) => {
   // REGISTER
   // ============================
   const register = async (name, email, password) => {
-    dispatch({ type: 'LOGIN_START' });
+    dispatch({ type: "LOGIN_START" });
 
     try {
       const res = await authApi.register(name, email, password);
 
-      // API returns:  { token, user }
-      localStorage.setItem('authToken', res.token);
-      localStorage.setItem('userData', JSON.stringify(res.user));
+      // Backend returns: { token, user }
+      if (res.token) {
+        localStorage.setItem("authToken", res.token);
+        localStorage.setItem("userData", JSON.stringify(res.user));
 
-      dispatch({ type: 'LOGIN_SUCCESS', payload: res.user });
-      return { success: true };
+        dispatch({ type: "LOGIN_SUCCESS", payload: res.user });
+        return { success: true, user: res.user };
+      }
 
+      return { success: false, error: "Invalid registration response" };
     } catch (err) {
       dispatch({
-        type: 'LOGIN_FAILURE',
-        payload: err.message || 'Register failed'
+        type: "LOGIN_FAILURE",
+        payload: err.message || "Register failed",
       });
 
       return { success: false, error: err.message };
@@ -124,9 +128,9 @@ export const AuthProvider = ({ children }) => {
   // LOGOUT
   // ============================
   const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-    dispatch({ type: 'LOGOUT' });
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userData");
+    dispatch({ type: "LOGOUT" });
   };
 
   // ============================
@@ -134,8 +138,8 @@ export const AuthProvider = ({ children }) => {
   // ============================
   const updateUser = (userData) => {
     const updatedUser = { ...state.user, ...userData };
-    localStorage.setItem('userData', JSON.stringify(updatedUser));
-    dispatch({ type: 'UPDATE_USER', payload: userData });
+    localStorage.setItem("userData", JSON.stringify(updatedUser));
+    dispatch({ type: "UPDATE_USER", payload: userData });
   };
 
   // ============================
@@ -152,17 +156,16 @@ export const AuthProvider = ({ children }) => {
       const updatedUser = {
         ...state.user,
         avatar: imageUrl,
-        profilePictureFile: file
+        profilePictureFile: file,
       };
 
-      localStorage.setItem('userData', JSON.stringify(updatedUser));
+      localStorage.setItem("userData", JSON.stringify(updatedUser));
       dispatch({
-        type: 'UPDATE_USER',
-        payload: { avatar: imageUrl, profilePictureFile: file }
+        type: "UPDATE_USER",
+        payload: { avatar: imageUrl, profilePictureFile: file },
       });
 
       return { success: true, imageUrl };
-
     } catch (err) {
       return { success: false, error: err.message };
     }
@@ -176,7 +179,7 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         updateUser,
-        updateProfilePicture
+        updateProfilePicture,
       }}
     >
       {children}
@@ -186,6 +189,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
   return ctx;
 };
