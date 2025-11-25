@@ -12,7 +12,9 @@ export const authApi = {
   async login(email, password) {
     const res = await fetch(`/api/auth/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+      },
       body: new URLSearchParams({ email, password })
     });
 
@@ -24,7 +26,9 @@ export const authApi = {
   async register(name, email, password) {
     const res = await fetch(`/api/auth/register`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+      },
       body: new URLSearchParams({ name, email, password })
     });
 
@@ -33,6 +37,7 @@ export const authApi = {
     return data;
   }
 };
+
 
 
 // ============================
