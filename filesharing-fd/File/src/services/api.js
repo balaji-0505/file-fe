@@ -1,42 +1,31 @@
-// ============================
-// BASE URL - ALWAYS relative to nginx
-// ============================
-const BASE = "";  // backend is at /api/* via nginx
+const BASE = "/api";
 
-const getToken = () => localStorage.getItem('authToken');
+const getToken = () => localStorage.getItem("authToken");
 
-// ============================
-// AUTH API
-// ============================
 export const authApi = {
-  async login(email, password) {
-    const res = await fetch(`/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-      },
-      body: new URLSearchParams({ email, password })
+  async register(name, email, password) {
+    const res = await fetch(`${BASE}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ name, email, password }),
     });
-
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Login failed');
+    if (!res.ok) throw new Error(data.error || "Register failed");
     return data;
   },
 
-  async register(name, email, password) {
-    const res = await fetch(`/api/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-      },
-      body: new URLSearchParams({ name, email, password })
+  async login(email, password) {
+    const res = await fetch(`${BASE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ email, password }),
     });
-
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Register failed');
+    if (!res.ok) throw new Error(data.error || "Login failed");
     return data;
   }
 };
+
 
 
 
