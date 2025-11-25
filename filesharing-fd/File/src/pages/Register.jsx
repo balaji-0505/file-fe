@@ -26,30 +26,35 @@ const Register = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
+  e.preventDefault();
+
+  if (formData.password !== formData.confirmPassword) {
+    toast.error("Passwords do not match");
+    return;
+  }
+
+  if (formData.password.length < 6) {
+    toast.error("Password must be at least 6 characters");
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    const result = await register(formData.name, formData.email, formData.password);
+
+    if (result?.token) {
+      toast.success("Account created successfully!");
+      navigate("/dashboard");
+    } else {
+      toast.error(result?.error || "Registration failed");
     }
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const result = await register(formData.name, formData.email, formData.password);
-      if (result?.success) {
-        toast.success('Account created successfully!');
-        navigate('/dashboard');
-      } else {
-        toast.error(result?.error || 'Registration failed');
-      }
-    } catch (error) {
-      toast.error(error.message || 'Registration failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  } catch (error) {
+    toast.error(error.message || "Registration failed");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
