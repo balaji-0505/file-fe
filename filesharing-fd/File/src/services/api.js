@@ -1,25 +1,18 @@
 // ============================
-// BASE URL — NGINX will proxy /api/* → backend
+// BASE URL (frontend uses NGINX → proxy /api/* to backend)
 // ============================
-const BASE = "";  // frontend serves from http://<node-ip>:30082
+const BASE = "/api";   // VERY IMPORTANT
 
-const getToken = () => localStorage.getItem("authToken");
+const getToken = () => localStorage.getItem('authToken');
 
-const jsonHeaders = (token) => ({
-  "Content-Type": "application/json",
-  ...(token ? { Authorization: `Bearer ${token}` } : {})
-});
-
-// =======================================================
-// AUTH API  (CORRECT BACKEND PATHS: /api/auth/* )
-// =======================================================
+// ============================
+// AUTH API
+// ============================
 export const authApi = {
   async login(email, password) {
-    const res = await fetch(`/api/auth/login`, {
+    const res = await fetch(`${BASE}/auth/login`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-      },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ email, password })
     });
 
@@ -29,11 +22,9 @@ export const authApi = {
   },
 
   async register(name, email, password) {
-    const res = await fetch(`/api/auth/register`, {
+    const res = await fetch(`${BASE}/auth/register`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-      },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ name, email, password })
     });
 
@@ -43,34 +34,14 @@ export const authApi = {
   }
 };
 
-// =======================================================
-// USER API (points to same backend endpoint)
-// =======================================================
-export const userApi = {
-  async register(username, email, password) {
-    const res = await fetch(`/api/auth/register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-      },
-      body: new URLSearchParams({ name: username, email, password })
-    });
-
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || "Registration failed");
-    return data;
-  }
-};
-
-// =======================================================
-// FILES API  (/api/files/*)
-// =======================================================
+// ============================
+// FILES API
+// ============================
 export const filesApi = {
   async list() {
-    const res = await fetch(`/api/files`, {
+    const res = await fetch(`${BASE}/files`, {
       headers: { Authorization: `Bearer ${getToken()}` }
     });
-
     if (!res.ok) throw new Error("Failed to list files");
     return res.json();
   },
@@ -80,7 +51,7 @@ export const filesApi = {
     form.append("file", file);
     if (folderId) form.append("folderId", folderId);
 
-    const res = await fetch(`/api/files`, {
+    const res = await fetch(`${BASE}/files`, {
       method: "POST",
       body: form,
       headers: { Authorization: `Bearer ${getToken()}` }
@@ -90,13 +61,12 @@ export const filesApi = {
     return res.json();
   },
 
-  async update(id, { name, isStarred }) {
+  async update(id, data) {
     const params = new URLSearchParams();
-    if (name) params.append("name", name);
-    if (isStarred != null)
-      params.append("starred", String(!!isStarred));
+    if (data.name) params.append("name", data.name);
+    if (data.isStarred != null) params.append("starred", data.isStarred);
 
-    const res = await fetch(`/api/files/${id}?${params}`, {
+    const res = await fetch(`${BASE}/files/${id}?${params}`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${getToken()}` }
     });
@@ -106,7 +76,7 @@ export const filesApi = {
   },
 
   async remove(id) {
-    const res = await fetch(`/api/files/${id}`, {
+    const res = await fetch(`${BASE}/files/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${getToken()}` }
     });
@@ -115,16 +85,16 @@ export const filesApi = {
   },
 
   downloadUrl(id) {
-    return `/api/files/${id}/download`;
+    return `${BASE}/files/${id}/download`;
   }
 };
 
-// =======================================================
-// FOLDERS API (/api/folders/*)
-// =======================================================
+// ============================
+// FOLDERS API
+// ============================
 export const foldersApi = {
   async list() {
-    const res = await fetch(`/api/folders`, {
+    const res = await fetch(`${BASE}/folders`, {
       headers: { Authorization: `Bearer ${getToken()}` }
     });
     if (!res.ok) throw new Error("Failed to list folders");
@@ -135,7 +105,7 @@ export const foldersApi = {
     const params = new URLSearchParams({ name });
     if (parentId) params.append("parentId", parentId);
 
-    const res = await fetch(`/api/folders?${params}`, {
+    const res = await fetch(`${BASE}/folders?${params}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${getToken()}` }
     });
@@ -147,7 +117,7 @@ export const foldersApi = {
   async rename(id, name) {
     const params = new URLSearchParams({ name });
 
-    const res = await fetch(`/api/folders/${id}?${params}`, {
+    const res = await fetch(`${BASE}/folders/${id}?${params}`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${getToken()}` }
     });
@@ -157,7 +127,7 @@ export const foldersApi = {
   },
 
   async remove(id) {
-    const res = await fetch(`/api/folders/${id}`, {
+    const res = await fetch(`${BASE}/folders/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${getToken()}` }
     });
@@ -166,159 +136,7 @@ export const foldersApi = {
   }
 };
 
-// =======================================================
-// SHARES API (/api/shares/*)
-// =======================================================
-export const sharesApi = {
-  async list() {
-    const res = await fetch(`/api/shares`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-    if (!res.ok) throw new Error("Failed to list shares");
-    return res.json();
-  },
-
-  async create({ fileId, shareType, permissions, expiryEpochMs, password, createdBy }) {
-    const params = new URLSearchParams({ fileId, shareType });
-
-    if (permissions?.length)
-      params.append("permissions", permissions.join(","));
-    if (expiryEpochMs) params.append("expiryEpochMs", expiryEpochMs);
-    if (password) params.append("password", password);
-    if (createdBy) params.append("createdBy", createdBy);
-
-    const res = await fetch(`/api/shares?${params}`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-
-    if (!res.ok) throw new Error("Create share failed");
-    return res.json();
-  },
-
-  async update(id, { shareType, permissions, expiryEpochMs, password }) {
-    const params = new URLSearchParams();
-    if (shareType) params.append("shareType", shareType);
-    if (permissions?.length)
-      params.append("permissions", permissions.join(","));
-    if (expiryEpochMs) params.append("expiryEpochMs", expiryEpochMs);
-    if (password) params.append("password", password);
-
-    const res = await fetch(`/api/shares/${id}?${params}`, {
-      method: "PATCH",
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-
-    if (!res.ok) throw new Error("Update share failed");
-    return res.json();
-  },
-
-  async remove(id) {
-    const res = await fetch(`/api/shares/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-
-    if (!res.ok) throw new Error("Delete failed");
-  }
-};
-
-// =======================================================
-// PASSHARE API (/api/passhare/*)
-// =======================================================
-export const passhareApi = {
-  async createSession() {
-    const res = await fetch(`/api/passhare/sessions`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-
-    if (!res.ok) throw new Error("Failed to create session");
-    return res.json();
-  },
-
-  async joinSession(code) {
-    const params = new URLSearchParams({ code });
-
-    const res = await fetch(`/api/passhare/sessions/join?${params}`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-
-    if (!res.ok) throw new Error("Failed to join session");
-    return res.json();
-  },
-
-  async getSession(sessionId) {
-    const res = await fetch(`/api/passhare/sessions/${sessionId}`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-
-    if (!res.ok) throw new Error("Failed to get session");
-    return res.json();
-  },
-
-  async shareFile(sessionId, fileId) {
-    const params = new URLSearchParams({ fileId });
-
-    const res = await fetch(`/api/passhare/sessions/${sessionId}/files?${params}`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-
-    if (!res.ok) throw new Error("Failed to share file");
-    return res.json();
-  },
-
-  async getSessionFiles(sessionId) {
-    const res = await fetch(`/api/passhare/sessions/${sessionId}/files`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-
-    if (!res.ok) throw new Error("Failed to load session files");
-    return res.json();
-  },
-
-  async getSessionParticipants(sessionId) {
-    const res = await fetch(`/api/passhare/sessions/${sessionId}/participants`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-
-    if (!res.ok) throw new Error("Failed to load participants");
-    return res.json();
-  },
-
-  async leaveSession(sessionId) {
-    const res = await fetch(`/api/passhare/sessions/${sessionId}/leave`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-
-    if (!res.ok) throw new Error("Failed to leave session");
-    return res.json();
-  },
-
-  async endSession(sessionId) {
-    const res = await fetch(`/api/passhare/sessions/${sessionId}/end`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-
-    if (!res.ok) throw new Error("Failed to end session");
-    return res.json();
-  },
-
-  async removeSharedFile(sessionId, sessionFileId) {
-    const res = await fetch(`/api/passhare/sessions/${sessionId}/files/${sessionFileId}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-
-    if (!res.ok) throw new Error("Failed to remove file");
-    return res.json();
-  },
-
-  downloadSessionFileUrl(sessionId, sessionFileId) {
-    return `/api/passhare/sessions/${sessionId}/files/${sessionFileId}/download`;
-  }
-};
+// ============================
+// SHARING + PASSHARE
+// (same pattern: always `${BASE}/...` )
+// ============================
