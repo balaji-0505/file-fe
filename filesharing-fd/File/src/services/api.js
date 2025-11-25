@@ -1,13 +1,9 @@
 // ============================
-// BASE URL from NGINX (auto-corrects inside Docker)
+// BASE URL - ALWAYS relative to nginx
 // ============================
-const BASE = "";  // IMPORTANT: keep empty so /api/... works
+const BASE = "";  // backend is at /api/* via nginx
 
-const getToken = () => localStorage.getItem("authToken");
-
-const formHeaders = {
-  "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-};
+const getToken = () => localStorage.getItem('authToken');
 
 // ============================
 // AUTH API
@@ -15,28 +11,29 @@ const formHeaders = {
 export const authApi = {
   async login(email, password) {
     const res = await fetch(`/api/auth/login`, {
-      method: "POST",
-      headers: formHeaders,
-      body: new URLSearchParams({ email, password }),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: new URLSearchParams({ email, password })
     });
 
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || "Login failed");
+    if (!res.ok) throw new Error(data.error || 'Login failed');
     return data;
   },
 
   async register(name, email, password) {
     const res = await fetch(`/api/auth/register`, {
-      method: "POST",
-      headers: formHeaders,
-      body: new URLSearchParams({ name, email, password }),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: new URLSearchParams({ name, email, password })
     });
 
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || "Registration failed");
+    if (!res.ok) throw new Error(data.error || 'Register failed');
     return data;
   }
 };
+
 
 // ============================
 // FILES API
