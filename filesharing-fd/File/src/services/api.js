@@ -1,7 +1,7 @@
 // ============================
 // BASE URL (NGINX PROXY)
 // ============================
-const BASE = "/api"; // IMPORTANT!
+const BASE = "/api";  // VERY IMPORTANT
 
 const getToken = () => localStorage.getItem("authToken");
 
@@ -22,7 +22,7 @@ export const authApi = {
 
     if (!res.ok) throw new Error(data.error || "Register failed");
 
-    return data;
+    return data; // contains { token, user }
   },
 
   async login(email, password) {
@@ -37,6 +37,7 @@ export const authApi = {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) throw new Error(data.error || "Login failed");
+
     return data;
   },
 };
@@ -66,28 +67,6 @@ export const filesApi = {
 
     if (!res.ok) throw new Error("Upload failed");
     return res.json();
-  },
-
-  async update(id, { name, isStarred }) {
-    const params = new URLSearchParams();
-    if (name) params.append("name", name);
-    if (isStarred != null) params.append("starred", String(!!isStarred));
-
-    const res = await fetch(`${BASE}/files/${id}?${params}`, {
-      method: "PATCH",
-      headers: { Authorization: `Bearer ${getToken()}` },
-    });
-
-    if (!res.ok) throw new Error("Update failed");
-    return res.json();
-  },
-
-  async remove(id) {
-    const res = await fetch(`${BASE}/files/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${getToken()}` },
-    });
-    if (!res.ok) throw new Error("Delete failed");
   },
 
   downloadUrl(id) {
@@ -120,6 +99,7 @@ export const foldersApi = {
     return res.json();
   },
 };
+
 
 // ============================
 // SHARES API
