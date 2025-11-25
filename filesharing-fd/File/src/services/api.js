@@ -1,14 +1,16 @@
-const BASE = "/api";
+// BASE for production (NGINX handles /api)
+const BASE = "";  
 
 const getToken = () => localStorage.getItem("authToken");
 
 export const authApi = {
   async register(name, email, password) {
-    const res = await fetch(`${BASE}/auth/register`, {
+    const res = await fetch(`/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ name, email, password }),
     });
+
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || "Register failed");
     return data;
