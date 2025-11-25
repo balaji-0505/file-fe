@@ -1,8 +1,7 @@
 // ============================
 // BASE URL (frontend uses NGINX → proxy to /api/* )
 // ============================
-const BASE = '/api';
-
+const BASE = window.location.origin; // http://localhost:30082
 
 const getToken = () => localStorage.getItem('authToken');
 
